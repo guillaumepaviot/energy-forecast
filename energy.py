@@ -1,5 +1,22 @@
-import requests
 import json
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
 
-response = requests.get("https://data.enedis.fr/explore/dataset/bilan-electrique-demi-heure/api/?sort=horodate&dataChart=eyJxdWVyaWVzIjpbeyJjb25maWciOnsiZGF0YXNldCI6ImJpbGFuLWVsZWN0cmlxdWUtZGVtaS1oZXVyZSIsIm9wdGlvbnMiOnsic29ydCI6Imhvcm9kYXRlIn19LCJjaGFydHMiOlt7ImFsaWduTW9udGgiOnRydWUsInR5cGUiOiJsaW5lIiwiZnVuYyI6IkFWRyIsInlBeGlzIjoiaW5qZWN0aW9uX3J0ZSIsInNjaWVudGlmaWNEaXNwbGF5Ijp0cnVlLCJjb2xvciI6IiMwMDVFQjgifSx7ImFsaWduTW9udGgiOnRydWUsInR5cGUiOiJsaW5lIiwiZnVuYyI6IkFWRyIsInlBeGlzIjoiY29uc29tbWF0aW9uX3RvdGFsZSIsInNjaWVudGlmaWNEaXNwbGF5Ijp0cnVlLCJjb2xvciI6IiMwMEEzRTAifV0sInhBeGlzIjoiaG9yb2RhdGUiLCJtYXhwb2ludHMiOjIwMCwidGltZXNjYWxlIjoiZGF5Iiwic29ydCI6IiJ9XSwiZGlzcGxheUxlZ2VuZCI6dHJ1ZSwiYWxpZ25Nb250aCI6dHJ1ZSwic2luZ2xlQXhpcyI6dHJ1ZX0%3D&rows=60000")
-print(response.status_code)
+response = requests.get("https://data.enedis.fr/api/records/1.0/search/?dataset=bilan-electrique-demi-heure&q=&rows=10000&sort=horodate&facet=horodate")
+json_data = json.loads(response.text)
+date, injection, consommation =[], [], []
+for record in json_data['records'] :
+    json_date = record['fields']['horodate'].replace('T',' ')
+    json_date = json_date.replace('00+00:00','00')
+    date.append(json_date)
+    injection.append(record['fields']['injection_rte'])
+    consommation.append(record['fields']['consommation_totale'])
+date = pd.to_datetime(date)
+data = pd.DataFrame(list(zip(injection, consommation)), index = date,columns=['Injection', 'Consommation'])
+
+
+decomposition = sm.tsa.seasonal_decompose(data['Consommation'], model='additive', period='30T')
+fig = decomposition.plot()
+plt.show()
