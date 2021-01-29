@@ -1,0 +1,7 @@
+fbprophet==0.7.1
+matplotlib==3.3.3
+numpy==1.18.5
+pandas==1.1.4
+statsmodels==0.12.1
+streamlit==0.75.0
+pystan==2.19.1.1
